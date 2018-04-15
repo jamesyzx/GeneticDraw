@@ -1,0 +1,74 @@
+# Draw Images Via Genetic Programming
+
+#### Team Members: 
+- Feng Huang(001230993) 
+- Zixuan Yu   (001263991)
+
+#### Team Number : 327
+
+
+
+
+
+
+## Problem Inspiration:
+
+My teammate and I created a genetic algorithm to get an image represented as a collection of **overlapping polygons** of various colors and transparencies. We start from random 100 polygons. In each optimization step, we randomly modify one  parameter (**like color, stacking or position of vertices**) and check whether such new variant looks more like the target image. If it is, we keep it, and continue to mutate this one instead.  Fitness is a sum of pixel-by-pixel **differences from the original image.** **Lower number is better**.
+
+### independent variables:
+- 1. Polygon Number
+
+- 2. Point Number
+
+- 3. Scale
+
+- 4. Cutoff                  (**for parallel processing**)
+
+- 5. Max Generation
+
+- 6. Generation Gap (**for  parallel processing**)
+
+- 7. Survival Rate
+
+- 8. Crossover Rate
+
+- 9. Mutate Rate
+
+
+## Implementation Design：
+
+
+
+### _Genetic code:_
+By changing the parameter (like **color, stacking or position of vertices**) and checking whether such new variant looks more like the target image, we keep the appropriate parameter. By comparing with the pixel of target image using **RGB**, we can get the absolute value of adding difference. Finally, by sorting  **difference(fitness)**  to keep better individuals.
+
+### _Gene expression:_
+Each target image made by  **buffered images**, and each **buffered image** is represented as 100 overlapping **polygons** of various colors and transparencies.
+
+
+## Function：
+
+### _Fitness function:_
+Fitness is a sum of **pixel-by-pixel** differences from the original image. Lower number is better. By comparing with the **pixel** of target image using **RGB**, we can get the **absolute value** of adding difference.
+
+### _Crossing Over:_
+
+we use the uniform crossover, which evaluates each bit in the parent strings for exchange with a probability of 0.5. The offspring has approximately half of the genes from first parent and the other half from second parent, although cross over points can be randomly chosen as seen below:
+-<image src="/Users/james/Desktop/crossover.png?raw=true" height="250px"/>
+ 
+ 
+### _Selector:_
+We use the Tournament selection to choose two parents in crossover. it run several "tournaments" among a few individuals (or "[chromosomes](https://en.wikipedia.org/wiki/Chromosome_(genetic_algorithm) "Chromosome (genetic algorithm)")") chosen at random from the population. The winner of each tournament (the one with the best fitness) is selected for [crossover](https://en.wikipedia.org/wiki/Crossover_(genetic_algorithm) "Crossover (genetic algorithm)")
+	
+
+
+### _Mutation:_
+When we copy the gene from the parents to child, we will get a **random number**. If it lower than **mutation rate**,  one of parameter **(like color, stacking or position of vertices)** will change.
+
+### _Evolution_:
+The population is stored as a priority queue, and we will sort the population by their fitness. We select a rate of these population. A part of population can be to evaluate, while other population is discarded.  **The first one (the lowest difference) will copy directly**, and paste into next generation. Besides, each population who can be kept has a **random rate** to mutation or crossover, and generate a next generation.
+
+> **For example**, the first generation is 100 individuals. We will **sort** them by their fitness, and select **former** 80% (80 individuals) to keep. Each of these individuals will get a number (0-1). When the individual who has number **more than 0.8**, it will crossover, else it will mutate.
+
+### _Parallel Processing:_ 
+We use the parallel processing to improve the speed of calculation. We use two variables **(cutoff and gap)**. The population will be divided into **several parts** (each part is a **thread**), each part will get their own generation by evolution function. And after acquiring several generations (gap means several generations), we will take these parts **together** to build a new generation. Later, **repeat** this loop until require the result.
